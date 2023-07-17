@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.devsibong.demo.dto.ResponseDTO;
 import com.devsibong.demo.dto.UserDTO;
 import com.devsibong.demo.model.UserEntity;
+import com.devsibong.demo.security.TokenProvider;
 import com.devsibong.demo.service.UserService;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/auth")
 public class UserController {
 	private final UserService userService;
+	private final TokenProvider tokenProvider;
 	
 	@PostMapping("/signup")
 	public ResponseEntity<?> registerUser(@RequestBody UserDTO userDTO) {
@@ -45,9 +47,11 @@ public class UserController {
 	public ResponseEntity<?> authenticate(@RequestBody UserDTO userDTO) {
 		UserEntity user = userService.getByCredentials(userDTO.getEmail(), userDTO.getPassword());
 		if(user != null) {
+			final String token = tokenProvider.create(user);
 			final UserDTO responseUserDTO = UserDTO.builder()
 					.email(user.getEmail())
 					.id(user.getId())
+					.token(token)
 					.build();
 			return ResponseEntity.ok().body(responseUserDTO);
 		} else {
